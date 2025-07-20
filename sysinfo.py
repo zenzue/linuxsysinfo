@@ -144,7 +144,7 @@ ip_info, gateway = get_network()
 disk_usage = get_disk_usage()
 disks = get_disks()
 
-line = "─" * 62
+line = "─" * 100
 print(line)
 print("   Linux System Overview                |         Powered by w01f")
 print(line)
