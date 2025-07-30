@@ -1,4 +1,4 @@
-import os, platform, subprocess, socket, shutil, time
+import os, platform, subprocess, socket, shutil, time, urllib.request, datetime
 
 def read_file(path):
     try: return open(path).read().strip()
@@ -79,12 +79,22 @@ def get_network():
             ip = socket.gethostbyname(socket.gethostname())
             ip_info.append(f"default: {ip}")
         except: ip_info = ["N/A"]
-    # Default gateway
     try:
         g = subprocess.check_output("ip route | grep default".split(), stderr=subprocess.DEVNULL).decode().split()
         gw = g[2] if len(g) > 2 else None
     except: gw = None
     return ip_info, gw
+
+def get_public_ip():
+    urls = ["https://api.ipify.org", "https://ifconfig.me/ip", "https://ipecho.net/plain"]
+    for url in urls:
+        try:
+            with urllib.request.urlopen(url, timeout=5) as r:
+                ip = r.read().decode().strip()
+                if ip and len(ip.split(".")) == 4:
+                    return ip
+        except: continue
+    return "N/A"
 
 def get_disk_usage():
     try:
@@ -114,6 +124,36 @@ def get_disks():
     except: pass
     return disks if disks else ["N/A"]
 
+def get_timezone():
+    try:
+        out = subprocess.check_output(["timedatectl"], stderr=subprocess.DEVNULL).decode()
+        for line in out.splitlines():
+            if "Time zone" in line:
+                return line.split(":",1)[1].strip()
+    except:
+        try:
+            tz = time.tzname
+            return tz[0] if tz else "N/A"
+        except: return "N/A"
+    return "N/A"
+
+def get_gpu_status():
+    try:
+        out = subprocess.check_output(["nvidia-smi", "--query-gpu=name,utilization.gpu,temperature.gpu,memory.used,memory.total", "--format=csv,noheader,nounits"], stderr=subprocess.DEVNULL).decode()
+        gpus = []
+        for line in out.strip().splitlines():
+            n, util, temp, memu, memt = [x.strip() for x in line.split(",")]
+            gpus.append(f"{n}: Load {util}% | Temp {temp}°C | Mem {memu}/{memt} MB")
+        return gpus if gpus else ["N/A"]
+    except: return ["N/A"]
+
+def get_top_processes():
+    try:
+        out = subprocess.check_output("ps -eo pid,user,pcpu,pmem,comm --sort=-pcpu | head -n 11", shell=True, stderr=subprocess.DEVNULL).decode()
+        lines = out.strip().splitlines()
+        return lines
+    except: return ["N/A"]
+
 sys_vendor = get_dmi('sys_vendor') or "N/A"
 sys_model = get_dmi('product_name') or "N/A"
 board_vendor = get_dmi('board_vendor') or "N/A"
@@ -141,8 +181,12 @@ uptime = get_uptime()
 temp = get_temp()
 hostname = get_hostname()
 ip_info, gateway = get_network()
+public_ip = get_public_ip()
 disk_usage = get_disk_usage()
 disks = get_disks()
+timezone = get_timezone()
+gpu_status = get_gpu_status()
+top_procs = get_top_processes()
 
 line = "─" * 100
 print(line)
@@ -156,11 +200,20 @@ print(f" CPU      : {cpu_model}")
 print(f" Usage    : {cpu_usage}")
 print(f" Temp     : {temp}")
 print(f" Memory   : {mem_usage}")
-print(f" Uptime   : {uptime}\n")
+print(f" Uptime   : {uptime}")
+print(f" Timezone : {timezone}\n")
 print(f" Network  : {', '.join(ip_info)}")
+print(f" PublicIP : {public_ip}")
 if gateway: print(f" Gateway  : {gateway}\n")
 else: print()
 print(f" Disk     : {disk_usage}")
 print(f" Disks    :")
 for d in disks: print(f"           - {d}")
+print(f" GPU      :")
+for g in gpu_status: print(f"           - {g}")
+print(line)
+print(" Top 10 Running Processes")
+if top_procs and isinstance(top_procs, list):
+    for idx, p in enumerate(top_procs):
+        print(p)
 print(line)
