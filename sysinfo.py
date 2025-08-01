@@ -45,20 +45,39 @@ def get_uptime():
     except: return "N/A"
 
 def get_temp():
+    try:
+        out = subprocess.check_output(['sensors'], stderr=subprocess.DEVNULL).decode()
+        temps = []
+        cpu_temp = None
+        for line in out.splitlines():
+            line = line.strip()
+            if 'Package id 0:' in line or 'Tdie:' in line:
+                v = [t for t in line.split() if '°C' in t]
+                if v:
+                    cpu_temp = v[0]
+                    break
+            if 'Core 0:' in line or 'Tctl:' in line or 'Physical id 0:' in line:
+                v = [t for t in line.split() if '°C' in t]
+                if v:
+                    temps.append(float(v[0].replace('°C','')))
+        if cpu_temp:
+            return cpu_temp
+        if temps:
+            return f"{max(temps):.1f}°C"
+    except:
+        pass
     paths = ['/sys/class/thermal/thermal_zone0/temp','/sys/class/hwmon/hwmon0/temp1_input']
     for p in paths:
         val = read_file(p)
         if val:
-            try: t = float(val) / 1000 if len(val)>3 else float(val); return f"{t:.1f}°C"
+            try: 
+                t = float(val)
+                if t > 200: t = t / 1000
+                if t > 0 and t < 130:
+                    return f"{t:.1f}°C"
             except: continue
-    try:
-        out = subprocess.check_output(['sensors'], stderr=subprocess.DEVNULL).decode()
-        for line in out.splitlines():
-            if 'temp1:' in line or 'Core 0:' in line:
-                p = [t for t in line.split() if '°C' in t]
-                if p: return p[0]
-    except: pass
     return "N/A"
+
 
 def get_hostname():
     try: return socket.gethostname()
