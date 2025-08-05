@@ -50,7 +50,7 @@ python3 sysinfo.py
  Disks    :
            - SSD:  Samsung SSD 990 PRO 1TB (931.5 GB) [nvme0n1]
  GPU      :
-           - N/A
+           - Detected: 00:02.0 VGA compatible controller [0300]: Intel Corporation Iris Plus Graphics G7 [8086:8a52] (rev 07)
 ────────────────────────────────────────────────────────────────────────────────────────────────────
  Top 10 Running Processes
 PID USER     %CPU %MEM COMMAND
