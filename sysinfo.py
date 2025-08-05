@@ -254,10 +254,19 @@ print(f" PublicIP : {public_ip}")
 if gateway: print(f" Gateway  : {gateway}\n")
 else: print()
 print(f" Disk     : {disk_usage}")
-print(f" Disks    :")
-for d in disks: print(f"           - {d}")
-print(f" GPU      :")
-for g in gpu_status: print(f"           - {g}")
+if disks:
+    print(f" Disks    : {disks[0]}")
+    for d in disks[1:]:
+        print(f"             {d}")
+else:
+    print(f" Disks    : N/A")
+
+if gpu_status:
+    print(f" GPU      : {gpu_status[0]}")
+    for g in gpu_status[1:]:
+        print(f"             {g}")
+else:
+    print(f" GPU      : N/A")
 print(line)
 print(" Top 10 Running Processes")
 if top_procs and isinstance(top_procs, list):
