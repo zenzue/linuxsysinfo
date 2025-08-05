@@ -158,13 +158,41 @@ def get_timezone():
 
 def get_gpu_status():
     try:
-        out = subprocess.check_output(["nvidia-smi", "--query-gpu=name,utilization.gpu,temperature.gpu,memory.used,memory.total", "--format=csv,noheader,nounits"], stderr=subprocess.DEVNULL).decode()
+        out = subprocess.check_output(
+            ["nvidia-smi", "--query-gpu=name,utilization.gpu,temperature.gpu,memory.used,memory.total", "--format=csv,noheader,nounits"],
+            stderr=subprocess.DEVNULL
+        ).decode()
         gpus = []
         for line in out.strip().splitlines():
             n, util, temp, memu, memt = [x.strip() for x in line.split(",")]
-            gpus.append(f"{n}: Load {util}% | Temp {temp}°C | Mem {memu}/{memt} MB")
-        return gpus if gpus else ["N/A"]
-    except: return ["N/A"]
+            gpus.append(f"NVIDIA {n}: Load {util}% | Temp {temp}°C | Mem {memu}/{memt} MB")
+        if gpus:
+            return gpus
+    except Exception:
+        pass
+
+    try:
+        out = subprocess.check_output(
+            ["rocm-smi", "--showproductname", "--showuse", "--showtemp", "--showmemuse"],
+            stderr=subprocess.DEVNULL
+        ).decode()
+        if out.strip():
+            return [f"AMD GPU: {line.strip()}" for line in out.strip().splitlines() if line.strip()]
+    except Exception:
+        pass
+
+    try:
+        out = subprocess.check_output(["lspci", "-nnk"], stderr=subprocess.DEVNULL).decode()
+        gpus = []
+        for line in out.splitlines():
+            if "VGA compatible controller" in line or "3D controller" in line:
+                gpus.append(line.strip())
+        if gpus:
+            return [f"Detected: {g}" for g in gpus]
+    except Exception:
+        pass
+
+    return ["N/A"]
 
 def get_top_processes():
     try:
