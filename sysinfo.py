@@ -194,6 +194,44 @@ def get_gpu_status():
 
     return ["N/A"]
 
+def get_cpu_fan_rpm():
+    try:
+        out = subprocess.check_output(["sensors"], stderr=subprocess.DEVNULL).decode()
+        fan_lines = [l for l in out.splitlines() if "fan" in l.lower() and "rpm" in l.lower()]
+        fan_rpms = []
+        for l in fan_lines:
+            parts = l.strip().split()
+            for i, p in enumerate(parts):
+                if "rpm" in p.lower():
+                    try:
+                        rpm_val = int(parts[i-1])
+                        if rpm_val > 0:
+                            fan_rpms.append(f"{parts[0]}: {rpm_val} RPM")
+                    except Exception:
+                        continue
+        if fan_rpms:
+            return fan_rpms
+    except Exception:
+        pass
+    return ["N/A"]
+
+def get_gpu_fan_rpm():
+    try:
+        out = subprocess.check_output(
+            ["nvidia-smi", "--query-gpu=fan.speed", "--format=csv,noheader,nounits"],
+            stderr=subprocess.DEVNULL
+        ).decode().strip().splitlines()
+        return [f"NVIDIA GPU Fan: {rpm}%" for rpm in out if rpm]
+    except Exception:
+        pass
+    try:
+        out = subprocess.check_output(["rocm-smi", "--showfan"], stderr=subprocess.DEVNULL).decode()
+        fan_lines = [l for l in out.splitlines() if "Fan Level" in l or "Fan Speed" in l]
+        return [l.strip() for l in fan_lines] if fan_lines else ["N/A"]
+    except Exception:
+        pass
+    return ["N/A"]
+
 def get_top_processes():
     try:
         out = subprocess.check_output("ps -eo pid,user,pcpu,pmem,comm --sort=-pcpu | head -n 11", shell=True, stderr=subprocess.DEVNULL).decode()
@@ -234,6 +272,8 @@ disks = get_disks()
 timezone = get_timezone()
 gpu_status = get_gpu_status()
 top_procs = get_top_processes()
+cpu_fan_status = get_cpu_fan_rpm()
+gpu_fan_status = get_gpu_fan_rpm()
 
 line = "─" * 100
 print(line)
@@ -246,6 +286,9 @@ print(f" Kernel   : {kernel} {arch}\n")
 print(f" CPU      : {cpu_model}")
 print(f" Usage    : {cpu_usage}")
 print(f" Temp     : {temp}")
+print(f" CPU Fan  : {cpu_fan_status[0]}")
+for f in cpu_fan_status[1:]:
+    print(f"             {f}")
 print(f" Memory   : {mem_usage}")
 print(f" Uptime   : {uptime}")
 print(f" Timezone : {timezone}\n")
@@ -267,6 +310,9 @@ if gpu_status:
         print(f"             {g}")
 else:
     print(f" GPU      : N/A")
+print(f" GPU Fan  : {gpu_fan_status[0]}")
+for f in gpu_fan_status[1:]:
+    print(f"             {f}")
 print(line)
 print(" Top 10 Running Processes")
 if top_procs and isinstance(top_procs, list):
