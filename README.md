@@ -77,7 +77,7 @@ If any value is unavailable, “N/A” will be shown.
 * Python 3.x
 * For temperature: `lm-sensors` utility (optional)
 
-  * Install with: `sudo apt install lm-sensors`
+  * Install with: `sudo apt install lm-sensors` or `sudo pacman -Syu lm_sensors`
   * Then run: `sensors-detect` and reboot
 
 ---
