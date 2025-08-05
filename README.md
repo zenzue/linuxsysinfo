@@ -47,10 +47,10 @@ python3 sysinfo.py
  PublicIP : xxx.xx.xxx.xxx
 
  Disk     : 432.6 GB / 899.1 GB (48%)
- Disks    :
-           - SSD:  Samsung SSD 990 PRO 1TB (931.5 GB) [nvme0n1]
- GPU      :
-           - Detected: 00:02.0 VGA compatible controller [0300]: Intel Corporation Iris Plus Graphics G7 [8086:8a52] (rev 07)
+Disks    : SSD: Samsung SSD 990 PRO 1TB (931.5 GB) [nvme0n1]
+             HDD: Seagate ST2000DM008 (1.8 TB) [sda]
+GPU      : NVIDIA RTX 3070: Load 10% | Temp 55°C | Mem 4000/8192 MB
+             Detected: 00:02.0 VGA compatible controller [0300]: Intel Corporation Iris Xe Graphics [8086:9a49] (rev 01)
 ────────────────────────────────────────────────────────────────────────────────────────────────────
  Top 10 Running Processes
 PID USER     %CPU %MEM COMMAND
